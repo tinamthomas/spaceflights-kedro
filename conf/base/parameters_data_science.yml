@@ -1,12 +1,83 @@
-model_options:
-  test_size: 0.2
-  random_state: 3
-  features:
-    - engines
-    - passenger_capacity
-    - crew
-    - d_check_complete
-    - moon_clearance_complete
-    - iata_approved
-    - company_rating
-    - review_scores_rating
+# ============================================================================
+# Data Science Pipeline Parameters
+# Aircraft Range Prediction Neural Network
+# ============================================================================
+# Reference: specs/001-aircraft-range-prediction/plan.md
+# Constitution: All hyperparameters externalized per Kedro best practices
+
+# Model Architecture Configuration
+# ============================================================================
+model:
+  architecture:
+    input_features: 5  # passenger_capacity, num_engines, crew_size, wingspace_m, length_m
+    hidden_layers: [64, 32]  # Two hidden layers: 64 → 32 units
+    activation: "relu"  # ReLU activation between layers
+    batch_norm: true  # Apply batch normalization after each layer
+    dropout_rate: 0.2  # Dropout probability for regularization & MC Dropout uncertainty
+    output_features: 1  # Single output: predicted_range_km
+
+# Training Hyperparameters
+# ============================================================================
+training:
+  random_seed: 42  # For reproducibility
+  batch_size: 32
+  epochs: 100
+  learning_rate: 0.001
+  optimizer: "adam"  # Adam optimizer with learning_rate above
+  loss_function: "mse"  # Mean Squared Error loss
+  early_stopping:
+    enabled: true
+    patience: 10  # Stop if validation loss doesn't improve for 10 epochs
+    metric: "validation_loss"
+  train_val_test_split:
+    train: 0.70  # 70% training
+    val: 0.15  # 15% validation
+    test: 0.15  # 15% test
+
+# Data Preprocessing
+# ============================================================================
+preprocessing:
+  missing_value_strategy: "median"  # Impute missing values with median
+  outlier_removal:
+    enabled: true
+    method: "iqr"  # Interquartile range method
+    iqr_multiplier: 1.5  # Remove values > Q3 + 1.5*IQR or < Q1 - 1.5*IQR
+  normalization:
+    method: "standardscaler"  # Zero-mean, unit-variance normalization
+    fit_on: "training_set"  # Fit scaler on training data only
+
+# Prediction & Uncertainty Quantification
+# ============================================================================
+prediction:
+  n_mc_samples: 10  # Number of Monte Carlo Dropout forward passes for uncertainty
+  confidence_level: 0.95  # 95% confidence interval (corresponds to ±1.96*std)
+  ci_percentile: 95  # Percentile for confidence interval calculation
+  extrapolation:
+    handling: "clip_and_warn"  # Clip features to training bounds + log warning
+    clip_margin: 0.05  # Clip to [min, max] ± 5% tolerance
+
+# Performance Monitoring
+# ============================================================================
+evaluation:
+  metrics:
+    - "rmse"  # Root Mean Squared Error
+    - "r2"  # R-squared coefficient of determination
+    - "mae"  # Mean Absolute Error
+  segmentation_by: "aircraft_type"  # Evaluate performance per aircraft type (if available)
+  drift_detection:
+    enabled: true
+    reference_model: null  # Will reference previous best model
+  ci_calibration_check:
+    enabled: true
+    target_coverage: 0.95  # Expect 95% of actual values in predicted CI
+    tolerance: 0.05  # Allow ±5% deviation from target
+
+# Model Serialization & Versioning
+# ============================================================================
+model_registry:
+  save_dir: "data/06_models"  # Directory for model artifacts
+  metadata_format: "json"  # Store training metadata as JSON
+  state_dict_format: "torch"  # PyTorch state_dict serialization
+  versioning:
+    strategy: "timestamp"  # Model ID includes timestamp: aircraft_range_v1_YYYYMMDD_HHMMSS
+    backup_previous: true  # Keep previous models for comparison/rollback
