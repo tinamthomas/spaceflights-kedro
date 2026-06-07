@@ -1,1 +1,0 @@
-"""Spaceflights Kedro project package."""
