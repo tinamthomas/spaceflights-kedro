@@ -1,0 +1,29 @@
+# PyTorch Neural Network Pipeline Data Catalog
+# All datasets for the neural network training pipeline
+
+# Training Input Data
+train_x:
+  type: pickle.PickleDataset
+  filepath: data/05_model_input/train_x.pkl
+
+train_y:
+  type: pickle.PickleDataset
+  filepath: data/05_model_input/train_y.pkl
+
+# Model Artifacts
+untrained_model:
+  type: pickle.PickleDataset
+  filepath: data/06_models/untrained_model.pkl
+
+trained_model:
+  type: pickle.PickleDataset
+  filepath: data/06_models/trained_model.pkl
+
+# Evaluation and Prediction Outputs
+training_metrics:
+  type: json.JSONDataset
+  filepath: data/08_reporting/training_metrics.json
+
+sample_prediction:
+  type: json.JSONDataset
+  filepath: data/08_reporting/sample_prediction.json

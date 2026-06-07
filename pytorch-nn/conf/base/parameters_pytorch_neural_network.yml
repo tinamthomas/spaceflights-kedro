@@ -1,0 +1,16 @@
+# PyTorch Neural Network Pipeline Parameters
+# Configuration for model architecture and training
+
+# Model Architecture Configuration
+model_config:
+  input_size: 1          # Input tensor dimension
+  hidden_size: 1         # Hidden layer dimension
+  output_size: 1         # Output tensor dimension
+  use_bias: false        # Whether to use bias in linear layer
+
+# Training Configuration
+training_config:
+  epochs: 150            # Number of training iterations (CONFIGURABLE - experimentation value)
+  learning_rate: 0.01    # SGD learning rate (CONFIGURABLE - experimentation value)
+  loss_function: "mse"   # Loss function type (hardcoded)
+  optimizer_type: "sgd"  # Optimizer algorithm (hardcoded)
